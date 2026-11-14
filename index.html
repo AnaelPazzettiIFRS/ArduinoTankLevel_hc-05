@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💧 Water Tank Monitor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+</head>
+<body>
+    <div id="app">
+
+        <!-- Browser Support Warning -->
+        <div id="browser-warning" class="browser-warning hidden">
+            <div class="warning-content">
+                <span>⚠️</span>
+                <p>Web Serial API is not supported in this browser. Please use <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> (desktop).</p>
+            </div>
+        </div>
+
+        <!-- Notification Banner -->
+        <div id="notification-banner" class="notification-banner hidden">
+            <span id="notification-icon">ℹ️</span>
+            <span id="notification-text"></span>
+            <button id="notification-close" onclick="dismissNotification()">✕</button>
+        </div>
+
+        <!-- Header -->
+        <header>
+            <div class="header-left">
+                <h1>💧 Water Tank Monitor</h1>
+                <span class="subtitle">Real-time Bluetooth Ultrasonic Sensor Dashboard</span>
+            </div>
+            <div class="header-right">
+                <div class="connection-status">
+                    <span id="status-dot" class="status-dot disconnected"></span>
+                    <span id="status-text">Disconnected</span>
+                </div>
+                <button id="connect-btn" class="btn-connect" onclick="toggleConnection()">
+                    <span id="connect-icon">⚡</span>
+                    <span id="connect-text">Connect</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main>
+
+            <!-- Tank Visualization -->
+            <section class="tank-section">
+                <div class="card">
+                    <h2>Tank Level</h2>
+                    <div class="tank-wrapper">
+                        <div class="tank-container">
+                            <div class="tank">
+                                <div class="sensor-icon" title="HC-SR04 Sensor">📡</div>
+                                <div id="water" class="water healthy" style="height: 0%">
+                                    <div class="wave"></div>
+                                    <div class="wave wave2"></div>
+                                </div>
+                                <div id="tank-percentage" class="tank-percentage">—</div>
+                                <!-- Tank level markers -->
+                                <div class="tank-markers">
+                                    <span style="top: 0%">100</span>
+                                    <span style="top: 25%">75</span>
+                                    <span style="top: 50%">50</span>
+                                    <span style="top: 75%">25</span>
+                                    <span style="top: 96%">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="card stat-card">
+                    <div class="stat-icon">📏</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Sensor Distance</span>
+                        <span id="stat-distance" class="stat-value">— cm</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon">🌊</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Water Level</span>
+                        <span id="stat-level" class="stat-value">— cm</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Fill Percentage</span>
+                        <span id="stat-percentage" class="stat-value">—</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon" id="status-emoji">⏳</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Status</span>
+                        <span id="stat-status" class="stat-value status-idle">Waiting</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card stat-card-wide">
+                    <div class="stat-row">
+                        <div class="stat-mini">
+                            <span class="stat-label">Session Min</span>
+                            <span id="stat-min" class="stat-value small">—</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-label">Session Max</span>
+                            <span id="stat-max" class="stat-value small">—</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-label">Readings</span>
+                            <span id="stat-count" class="stat-value small">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Panel -->
+            <section class="settings-section">
+                <div class="card">
+                    <h2>⚙️ Settings</h2>
+
+                    <div class="setting-group">
+                        <label for="tank-height">Tank Height (cm)</label>
+                        <input type="number" id="tank-height" value="100" min="1" max="1000">
+                        <span class="setting-help">Total internal height of your water tank</span>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="sensor-offset">Sensor Offset (cm)</label>
+                        <input type="number" id="sensor-offset" value="5" min="0" max="200">
+                        <span class="setting-help">Distance from sensor to water surface when tank is 100% full</span>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="low-threshold">Low Level Alert (%)</label>
+                        <input type="number" id="low-threshold" value="20" min="1" max="99">
+                        <span class="setting-help">Warn when water drops below this</span>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="critical-threshold">Critical Level (%)</label>
+                        <input type="number" id="critical-threshold" value="10" min="1" max="50">
+                        <span class="setting-help">Critical alarm threshold</span>
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sound-enabled" checked>
+                            <span>🔊 Sound Alerts</span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <button class="btn-secondary" onclick="requestNotificationPermission()">
+                            🔔 Enable Browser Notifications
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Connection Help -->
+                <div class="card card-info">
+                    <h3>📋 How to Connect</h3>
+                    <ol>
+                        <li>Pair HC-05 with your PC via <strong>Windows Bluetooth Settings</strong> (PIN: 1234)</li>
+                        <li>Open this page in <strong>Chrome</strong> or <strong>Edge</strong></li>
+                        <li>Click <strong>Connect</strong> and select the HC-05 serial port</li>
+                        <li>Data will stream in real-time from the Arduino</li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+
+        <!-- Chart Section -->
+        <section class="chart-section">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>📈 Level History</h2>
+                    <span id="chart-info" class="chart-info">Waiting for data…</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alert Log -->
+        <section class="alert-section">
+            <div class="card">
+                <div class="chart-header">
+                    <h2>🔔 Alert Log</h2>
+                    <button class="btn-small" onclick="clearAlertLog()">Clear</button>
+                </div>
+                <div id="alert-log" class="alert-log">
+                    <p class="alert-empty">No alerts yet. Connect your sensor to begin monitoring.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>Water Tank Monitor &bull; Arduino HC-SR04 + HC-05 Bluetooth &bull; Web Serial API</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
