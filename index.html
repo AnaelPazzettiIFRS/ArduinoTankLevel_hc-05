@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💧 Water Tank Monitor</title>
+    <title>🍫 ChocoTank™ • Liquid Chocolate Silo Monitor</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍫</text></svg>">
 </head>
 <body>
     <div id="app">
@@ -14,13 +14,13 @@
         <div id="browser-warning" class="browser-warning hidden">
             <div class="warning-content">
                 <span>⚠️</span>
-                <p>Web Serial API is not supported in this browser. Please use <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> (desktop).</p>
+                <p>Web Serial API is not supported in this browser. Please use <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> (desktop) to connect to the HC-05 factory receiver.</p>
             </div>
         </div>
 
         <!-- Notification Banner -->
         <div id="notification-banner" class="notification-banner hidden">
-            <span id="notification-icon">ℹ️</span>
+            <span id="notification-icon">🍫</span>
             <span id="notification-text"></span>
             <button id="notification-close" onclick="dismissNotification()">✕</button>
         </div>
@@ -28,8 +28,9 @@
         <!-- Header -->
         <header>
             <div class="header-left">
-                <h1>💧 Water Tank Monitor</h1>
-                <span class="subtitle">Real-time Bluetooth Ultrasonic Sensor Dashboard</span>
+                <div class="brand-badge">🏭 CONFECTIONERY PLANT TELEMETRY</div>
+                <h1>🍫 ChocoTank™ Silo Monitor</h1>
+                <span class="subtitle">Real-time HC-05 Bluetooth Ultrasonic Sensor • Molten Chocolate Vat #01</span>
             </div>
             <div class="header-right">
                 <div class="connection-status">
@@ -38,7 +39,7 @@
                 </div>
                 <button id="connect-btn" class="btn-connect" onclick="toggleConnection()">
                     <span id="connect-icon">⚡</span>
-                    <span id="connect-text">Connect</span>
+                    <span id="connect-text">Connect Silo</span>
                 </button>
             </div>
         </header>
@@ -48,27 +49,32 @@
 
             <!-- Tank Visualization -->
             <section class="tank-section">
-                <div class="card">
-                    <h2>Tank Level</h2>
+                <div class="card vat-card">
+                    <h2>🍫 Molten Chocolate Silo</h2>
                     <div class="tank-wrapper">
                         <div class="tank-container">
-                            <div class="tank">
-                                <div class="sensor-icon" title="HC-SR04 Sensor">📡</div>
-                                <div id="water" class="water healthy" style="height: 0%">
+                            <div class="tank vat-tank">
+                                <div class="sensor-icon" title="HC-SR04 Ultrasonic Transducer">📡</div>
+                                <div id="water" class="water chocolate healthy" style="height: 0%">
+                                    <div class="chocolate-sheen"></div>
                                     <div class="wave"></div>
                                     <div class="wave wave2"></div>
                                 </div>
                                 <div id="tank-percentage" class="tank-percentage">—</div>
                                 <!-- Tank level markers -->
                                 <div class="tank-markers">
-                                    <span style="top: 0%">100</span>
-                                    <span style="top: 25%">75</span>
-                                    <span style="top: 50%">50</span>
-                                    <span style="top: 75%">25</span>
-                                    <span style="top: 96%">0</span>
+                                    <span style="top: 0%">100%</span>
+                                    <span style="top: 25%">75%</span>
+                                    <span style="top: 50%">50%</span>
+                                    <span style="top: 75%">25%</span>
+                                    <span style="top: 96%">0%</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="vat-footer">
+                        <span>♨️ Heated Jacket: Active</span>
+                        <span>Viscosity: Optimal</span>
                     </div>
                 </div>
             </section>
@@ -84,17 +90,17 @@
                 </div>
 
                 <div class="card stat-card">
-                    <div class="stat-icon">🌊</div>
+                    <div class="stat-icon">🍫</div>
                     <div class="stat-info">
-                        <span class="stat-label">Water Level</span>
+                        <span class="stat-label">Chocolate Level</span>
                         <span id="stat-level" class="stat-value">— cm</span>
                     </div>
                 </div>
 
                 <div class="card stat-card">
-                    <div class="stat-icon">📊</div>
+                    <div class="stat-icon">🍯</div>
                     <div class="stat-info">
-                        <span class="stat-label">Fill Percentage</span>
+                        <span class="stat-label">Silo Fill Ratio</span>
                         <span id="stat-percentage" class="stat-value">—</span>
                     </div>
                 </div>
@@ -102,8 +108,8 @@
                 <div class="card stat-card">
                     <div class="stat-icon" id="status-emoji">⏳</div>
                     <div class="stat-info">
-                        <span class="stat-label">Status</span>
-                        <span id="stat-status" class="stat-value status-idle">Waiting</span>
+                        <span class="stat-label">Batch Supply Status</span>
+                        <span id="stat-status" class="stat-value status-idle">Awaiting Data</span>
                     </div>
                 </div>
 
@@ -118,7 +124,7 @@
                             <span id="stat-max" class="stat-value small">—</span>
                         </div>
                         <div class="stat-mini">
-                            <span class="stat-label">Readings</span>
+                            <span class="stat-label">Telemetry Packets</span>
                             <span id="stat-count" class="stat-value small">0</span>
                         </div>
                     </div>
@@ -128,54 +134,54 @@
             <!-- Settings Panel -->
             <section class="settings-section">
                 <div class="card">
-                    <h2>⚙️ Settings</h2>
+                    <h2>⚙️ Silo Calibration</h2>
 
                     <div class="setting-group">
-                        <label for="tank-height">Tank Height (cm)</label>
+                        <label for="tank-height">Vat Total Height (cm)</label>
                         <input type="number" id="tank-height" value="100" min="1" max="1000">
-                        <span class="setting-help">Total internal height of your water tank</span>
+                        <span class="setting-help">Internal capacity height of the chocolate silo</span>
                     </div>
 
                     <div class="setting-group">
-                        <label for="sensor-offset">Sensor Offset (cm)</label>
+                        <label for="sensor-offset">Sensor Head Clearance (cm)</label>
                         <input type="number" id="sensor-offset" value="5" min="0" max="200">
-                        <span class="setting-help">Distance from sensor to water surface when tank is 100% full</span>
+                        <span class="setting-help">Distance from sensor to chocolate surface when 100% full</span>
                     </div>
 
                     <div class="setting-group">
-                        <label for="low-threshold">Low Level Alert (%)</label>
+                        <label for="low-threshold">Low Chocolate Alert (%)</label>
                         <input type="number" id="low-threshold" value="20" min="1" max="99">
-                        <span class="setting-help">Warn when water drops below this</span>
+                        <span class="setting-help">Trigger warning when molten chocolate drops below this</span>
                     </div>
 
                     <div class="setting-group">
-                        <label for="critical-threshold">Critical Level (%)</label>
+                        <label for="critical-threshold">Critical Depletion (%)</label>
                         <input type="number" id="critical-threshold" value="10" min="1" max="50">
-                        <span class="setting-help">Critical alarm threshold</span>
+                        <span class="setting-help">Critical alarm to prevent pump cavitation & pipe clogging</span>
                     </div>
 
                     <div class="setting-group">
                         <label class="checkbox-label">
                             <input type="checkbox" id="sound-enabled" checked>
-                            <span>🔊 Sound Alerts</span>
+                            <span>🔊 Factory Audible Alarm</span>
                         </label>
                     </div>
 
                     <div class="setting-group">
                         <button class="btn-secondary" onclick="requestNotificationPermission()">
-                            🔔 Enable Browser Notifications
+                            🔔 Enable Browser Production Alerts
                         </button>
                     </div>
                 </div>
 
                 <!-- Connection Help -->
                 <div class="card card-info">
-                    <h3>📋 How to Connect</h3>
+                    <h3>🏭 Factory Bluetooth Pairing</h3>
                     <ol>
-                        <li>Pair HC-05 with your PC via <strong>Windows Bluetooth Settings</strong> (PIN: 1234)</li>
-                        <li>Open this page in <strong>Chrome</strong> or <strong>Edge</strong></li>
-                        <li>Click <strong>Connect</strong> and select the HC-05 serial port</li>
-                        <li>Data will stream in real-time from the Arduino</li>
+                        <li>Pair HC-05 with Windows Bluetooth (Default PIN: <code>1234</code> or <code>0000</code>)</li>
+                        <li>Open this web console in <strong>Chrome</strong> or <strong>Edge</strong></li>
+                        <li>Click <strong>Connect Silo</strong> and choose the virtual serial COM port</li>
+                        <li>Real-time chocolate level telemetry will begin streaming!</li>
                     </ol>
                 </div>
             </section>
@@ -185,8 +191,8 @@
         <section class="chart-section">
             <div class="card">
                 <div class="chart-header">
-                    <h2>📈 Level History</h2>
-                    <span id="chart-info" class="chart-info">Waiting for data…</span>
+                    <h2>📈 Chocolate Level History</h2>
+                    <span id="chart-info" class="chart-info">Waiting for telemetry stream…</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="chart"></canvas>
@@ -198,18 +204,18 @@
         <section class="alert-section">
             <div class="card">
                 <div class="chart-header">
-                    <h2>🔔 Alert Log</h2>
-                    <button class="btn-small" onclick="clearAlertLog()">Clear</button>
+                    <h2>🔔 Plant Incident & Refill Log</h2>
+                    <button class="btn-small" onclick="clearAlertLog()">Clear Log</button>
                 </div>
                 <div id="alert-log" class="alert-log">
-                    <p class="alert-empty">No alerts yet. Connect your sensor to begin monitoring.</p>
+                    <p class="alert-empty">No supply incidents recorded. Silo monitoring is active.</p>
                 </div>
             </div>
         </section>
 
         <!-- Footer -->
         <footer>
-            <p>Water Tank Monitor &bull; Arduino HC-SR04 + HC-05 Bluetooth &bull; Web Serial API</p>
+            <p>🍫 ChocoTank™ Industrial Telemetry • Confectionery Automation • Arduino HC-SR04 &bull; HC-05 Bluetooth (Web Serial API)</p>
         </footer>
     </div>
 

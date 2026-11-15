@@ -1,6 +1,6 @@
 /* ============================================================
-   Water Tank Monitor — app.js
-   Uses the Web Serial API to read HC-05 data (paired via
+   ChocoTank™ Confectionery Systems — app.js
+   Uses the Web Serial API to read HC-05 telemetry (paired via
    Windows Bluetooth → virtual COM port).
    ============================================================ */
 
@@ -9,10 +9,10 @@
 // ────────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-    tankHeight: 100,       // cm — internal height of the tank
-    sensorOffset: 5,       // cm — sensor-to-water when 100 % full
+    tankHeight: 100,       // cm — internal height of the chocolate silo
+    sensorOffset: 5,       // cm — sensor-to-chocolate when 100% full
     lowThreshold: 20,      // %  — low-level alert
-    criticalThreshold: 10, // %  — critical alert
+    criticalThreshold: 10, // %  — critical depletion alert
     soundEnabled: true
 };
 
@@ -58,7 +58,7 @@ function checkBrowserSupport() {
 
 function loadSettings() {
     try {
-        const saved = localStorage.getItem('waterTankConfig');
+        const saved = localStorage.getItem('chocoTankConfig');
         if (saved) config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
     } catch (_) { /* ignore corrupt data */ }
 
@@ -90,12 +90,11 @@ function updateSettings() {
         document.getElementById('critical-threshold').value = config.criticalThreshold;
     }
 
-    localStorage.setItem('waterTankConfig', JSON.stringify(config));
+    localStorage.setItem('chocoTankConfig', JSON.stringify(config));
 
     // Reprocess the last reading visually
     if (readings.length > 0) {
         const last = readings[readings.length - 1];
-        // Recompute with new settings
         const waterLevel  = config.tankHeight - (last.distance - config.sensorOffset);
         const clamped     = Math.max(0, Math.min(config.tankHeight, waterLevel));
         const percentage  = (clamped / config.tankHeight) * 100;
@@ -131,11 +130,11 @@ async function connect() {
         lastAlertLevel = null;
 
         updateConnectionUI(true);
-        readLoop();               // runs in the background
+        readLoop();
 
     } catch (err) {
         console.error('Connection failed:', err);
-        if (err.name !== 'NotFoundError') {  // user cancelled the picker
+        if (err.name !== 'NotFoundError') {
             showNotification('Connection failed: ' + err.message, 'error');
         }
     }
@@ -177,14 +176,13 @@ async function readLoop() {
         } catch (err) {
             console.error('Read error:', err);
             if (isConnected) {
-                showNotification('Connection lost — please reconnect.', 'error');
+                showNotification('Silo telemetry link interrupted — reconnect HC-05.', 'error');
             }
         } finally {
             if (reader) { reader.releaseLock(); reader = null; }
         }
     }
 
-    // If we fell out of the loop unexpectedly
     if (isConnected) {
         isConnected = false;
         updateConnectionUI(false);
@@ -197,14 +195,14 @@ async function readLoop() {
 
 function processBuffer() {
     const lines = buffer.split('\n');
-    buffer = lines.pop();          // keep the incomplete tail
+    buffer = lines.pop();
 
     for (const line of lines) {
-        const trimmed = line.trim();                  // strips \r too
+        const trimmed = line.trim();
         const match = trimmed.match(/^(\d+)\s*cm$/i);
         if (match) {
             const distance = parseInt(match[1], 10);
-            if (distance > 0) {                       // 0 = sensor timeout
+            if (distance > 0) {
                 processReading(distance);
             }
         }
@@ -224,7 +222,7 @@ function processReading(distance) {
     };
 
     readings.push(reading);
-    if (readings.length > 240) readings.shift();    // ≈ 2 min at 500 ms
+    if (readings.length > 240) readings.shift(); // ~2 min at 500ms
 
     sessionMin = Math.min(sessionMin, reading.percentage);
     sessionMax = Math.max(sessionMax, reading.percentage);
@@ -239,13 +237,13 @@ function processReading(distance) {
 // ────────────────────────────────────────────────────────────
 
 function updateDashboard(reading) {
-    // Water level bar
+    // Chocolate level bar in silo
     const waterEl = document.getElementById('water');
     waterEl.style.height = reading.percentage + '%';
 
-    if (reading.percentage <= config.criticalThreshold)      waterEl.className = 'water critical';
-    else if (reading.percentage <= config.lowThreshold)      waterEl.className = 'water warning';
-    else                                                     waterEl.className = 'water healthy';
+    if (reading.percentage <= config.criticalThreshold)      waterEl.className = 'water chocolate critical';
+    else if (reading.percentage <= config.lowThreshold)      waterEl.className = 'water chocolate warning';
+    else                                                     waterEl.className = 'water chocolate healthy';
 
     // Stat cards
     document.getElementById('tank-percentage').textContent  = reading.percentage.toFixed(1) + '%';
@@ -253,16 +251,16 @@ function updateDashboard(reading) {
     document.getElementById('stat-level').textContent       = reading.waterLevel.toFixed(1) + ' cm';
     document.getElementById('stat-percentage').textContent  = reading.percentage.toFixed(1) + '%';
 
-    // Status label
+    // Status label for confectionery production
     let status, statusClass, emoji;
     if (reading.percentage <= config.criticalThreshold) {
-        status = 'CRITICAL'; statusClass = 'critical'; emoji = '🚨';
+        status = 'CRITICAL DEPLETION'; statusClass = 'critical'; emoji = '🚨';
     } else if (reading.percentage <= config.lowThreshold) {
-        status = 'LOW'; statusClass = 'low'; emoji = '⚠️';
+        status = 'LOW SUPPLY'; statusClass = 'low'; emoji = '⚠️';
     } else if (reading.percentage >= 90) {
-        status = 'Full'; statusClass = 'full'; emoji = '✅';
+        status = 'Silo Full'; statusClass = 'full'; emoji = '🍫';
     } else {
-        status = 'Normal'; statusClass = 'normal'; emoji = '✅';
+        status = 'Optimal Melt'; statusClass = 'normal'; emoji = '🍯';
     }
 
     const statStatusEl = document.getElementById('stat-status');
@@ -282,11 +280,11 @@ function updateConnectionUI(connected) {
     document.getElementById('status-dot').className =
         'status-dot ' + (connected ? 'connected' : 'disconnected');
     document.getElementById('status-text').textContent =
-        connected ? 'Connected' : 'Disconnected';
+        connected ? 'Telemetry Active' : 'Disconnected';
 
     const btn = document.getElementById('connect-btn');
     document.getElementById('connect-text').textContent =
-        connected ? 'Disconnect' : 'Connect';
+        connected ? 'Disconnect Silo' : 'Connect Silo';
     btn.classList.toggle('connected', connected);
 }
 
@@ -300,24 +298,24 @@ function checkAlerts(reading) {
     if (reading.percentage <= config.criticalThreshold) {
         if (lastAlertLevel !== 'critical') {
             lastAlertLevel = 'critical';
-            const msg = `CRITICAL — water at ${reading.percentage.toFixed(1)}%  (${reading.waterLevel.toFixed(1)} cm)`;
+            const msg = `🚨 CRITICAL DEPLETION — Chocolate level at ${reading.percentage.toFixed(1)}% (${reading.waterLevel.toFixed(1)} cm)! Stop pump to prevent clogging.`;
             showNotification(msg, 'critical');
             addAlertLog(timeStr, msg, 'critical');
-            sendBrowserNotification('🚨 Critical Water Level!', msg);
+            sendBrowserNotification('🚨 Critical Chocolate Depletion!', msg);
             if (config.soundEnabled) playAlertSound('critical');
         }
     } else if (reading.percentage <= config.lowThreshold) {
         if (lastAlertLevel !== 'warning') {
             lastAlertLevel = 'warning';
-            const msg = `LOW — water at ${reading.percentage.toFixed(1)}%  (${reading.waterLevel.toFixed(1)} cm)`;
+            const msg = `⚠️ LOW SUPPLY — Molten chocolate at ${reading.percentage.toFixed(1)}% (${reading.waterLevel.toFixed(1)} cm). Prepare next batch.`;
             showNotification(msg, 'warning');
             addAlertLog(timeStr, msg, 'warning');
-            sendBrowserNotification('⚠️ Low Water Level', msg);
+            sendBrowserNotification('⚠️ Low Chocolate Level Alert', msg);
             if (config.soundEnabled) playAlertSound('warning');
         }
     } else {
         if (lastAlertLevel === 'critical' || lastAlertLevel === 'warning') {
-            const msg = `Level recovered to ${reading.percentage.toFixed(1)}%`;
+            const msg = `🍫 Batch replenished! Chocolate level restored to ${reading.percentage.toFixed(1)}%.`;
             showNotification(msg, 'success');
             addAlertLog(timeStr, msg, 'success');
         }
@@ -331,7 +329,7 @@ function showNotification(message, type) {
     const banner = document.getElementById('notification-banner');
     document.getElementById('notification-text').textContent = message;
     document.getElementById('notification-icon').textContent =
-        { critical: '🚨', warning: '⚠️', success: '✅', error: '❌' }[type] || 'ℹ️';
+        { critical: '🚨', warning: '⚠️', success: '🍫', error: '❌' }[type] || '🍫';
 
     banner.className = 'notification-banner ' + type;
 
@@ -363,7 +361,7 @@ function addAlertLog(time, message, type) {
 
 function clearAlertLog() {
     document.getElementById('alert-log').innerHTML =
-        '<p class="alert-empty">Alert log cleared.</p>';
+        '<p class="alert-empty">Incident log cleared. Silo telemetry online.</p>';
 }
 
 // ── Browser Notification API ──
@@ -374,14 +372,14 @@ function requestNotificationPermission() {
         return;
     }
     Notification.requestPermission().then(perm => {
-        if (perm === 'granted') showNotification('Browser notifications enabled!', 'success');
+        if (perm === 'granted') showNotification('Production notifications enabled!', 'success');
         else showNotification('Notification permission denied.', 'warning');
     });
 }
 
 function sendBrowserNotification(title, body) {
     if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, { body, icon: '💧', tag: 'water-level' });
+        new Notification(title, { body, icon: '🍫', tag: 'choco-level' });
     }
 }
 
@@ -396,21 +394,21 @@ function playAlertSound(type) {
         gain.connect(ctx.destination);
 
         if (type === 'critical') {
-            osc.type = 'square';
-            osc.frequency.value = 880;
-            gain.gain.value = 0.25;
+            osc.type = 'sawtooth';
+            osc.frequency.value = 750;
+            gain.gain.value = 0.22;
             osc.start();
-            gain.gain.setValueAtTime(0.25, ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.22, ctx.currentTime + 0.15);
             gain.gain.setValueAtTime(0,    ctx.currentTime + 0.20);
-            gain.gain.setValueAtTime(0.25, ctx.currentTime + 0.30);
+            gain.gain.setValueAtTime(0.22, ctx.currentTime + 0.30);
             gain.gain.setValueAtTime(0,    ctx.currentTime + 0.45);
-            gain.gain.setValueAtTime(0.25, ctx.currentTime + 0.55);
+            gain.gain.setValueAtTime(0.22, ctx.currentTime + 0.55);
             gain.gain.setValueAtTime(0,    ctx.currentTime + 0.70);
             osc.stop(ctx.currentTime + 0.75);
         } else {
             osc.type = 'sine';
-            osc.frequency.value = 660;
-            gain.gain.value = 0.18;
+            osc.frequency.value = 520;
+            gain.gain.value = 0.16;
             osc.start();
             gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35);
             osc.stop(ctx.currentTime + 0.4);
@@ -419,7 +417,7 @@ function playAlertSound(type) {
 }
 
 // ────────────────────────────────────────────────────────────
-// Chart (Canvas — no external libraries)
+// Chart (Canvas — Warm Caramel & Cocoa)
 // ────────────────────────────────────────────────────────────
 
 function setupChart() {
@@ -445,9 +443,7 @@ function resizeChart() {
     else drawEmptyChart();
 }
 
-// ── helpers ──
-
-const PAD = { top: 14, right: 14, bottom: 28, left: 44 };
+const PAD = { top: 16, right: 16, bottom: 28, left: 46 };
 
 function logicalSize() {
     return {
@@ -460,7 +456,7 @@ function logicalSize() {
 
 function drawGrid(ctx, s) {
     ctx.save();
-    ctx.strokeStyle = '#334155';
+    ctx.strokeStyle = '#382015';
     ctx.lineWidth   = 1;
     ctx.setLineDash([4, 4]);
 
@@ -471,7 +467,7 @@ function drawGrid(ctx, s) {
         ctx.lineTo(s.w - PAD.right, y);
         ctx.stroke();
 
-        ctx.fillStyle  = '#94a3b8';
+        ctx.fillStyle  = '#a57e65';
         ctx.font       = '11px system-ui, sans-serif';
         ctx.textAlign  = 'right';
         ctx.fillText((100 - i * 25) + '%', PAD.left - 6, y + 4);
@@ -484,7 +480,7 @@ function drawThresholdLine(ctx, s, pct, color, label) {
     const y = PAD.top + s.ch * (1 - pct / 100);
     ctx.save();
     ctx.strokeStyle = color;
-    ctx.lineWidth   = 1;
+    ctx.lineWidth   = 1.2;
     ctx.setLineDash([6, 4]);
     ctx.beginPath();
     ctx.moveTo(PAD.left, y);
@@ -495,23 +491,21 @@ function drawThresholdLine(ctx, s, pct, color, label) {
     ctx.fillStyle = color;
     ctx.font      = '10px system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(label, PAD.left + 4, y - 5);
+    ctx.fillText(label, PAD.left + 6, y - 5);
     ctx.restore();
 }
-
-// ── render ──
 
 function drawEmptyChart() {
     const s = logicalSize();
     chartCtx.clearRect(0, 0, s.w, s.h);
-    chartCtx.fillStyle = '#1e293b';
+    chartCtx.fillStyle = '#1e120b';
     chartCtx.fillRect(0, 0, s.w, s.h);
     drawGrid(chartCtx, s);
 
-    chartCtx.fillStyle = '#64748b';
+    chartCtx.fillStyle = '#8e7362';
     chartCtx.font      = '14px system-ui, sans-serif';
     chartCtx.textAlign = 'center';
-    chartCtx.fillText('Waiting for data…', s.w / 2, s.h / 2);
+    chartCtx.fillText('Awaiting chocolate level telemetry…', s.w / 2, s.h / 2);
 }
 
 function updateChart() {
@@ -521,22 +515,21 @@ function updateChart() {
     const s   = logicalSize();
 
     ctx.clearRect(0, 0, s.w, s.h);
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(0, 0, s.w, s.h);
+    ctx.fillStyle = '#1e120b';
+    chartCtx.fillRect(0, 0, s.w, s.h);
 
     drawGrid(ctx, s);
-    drawThresholdLine(ctx, s, config.lowThreshold,      '#f59e0b', 'Low ' + config.lowThreshold + '%');
-    drawThresholdLine(ctx, s, config.criticalThreshold,  '#ef4444', 'Critical ' + config.criticalThreshold + '%');
+    drawThresholdLine(ctx, s, config.lowThreshold,      '#f59e0b', 'Low Supply ' + config.lowThreshold + '%');
+    drawThresholdLine(ctx, s, config.criticalThreshold,  '#ef4444', 'Critical Depletion ' + config.criticalThreshold + '%');
 
     if (readings.length < 2) return;
 
-    // Map readings to pixel coordinates
     const points = readings.map((r, i) => ({
         x: PAD.left + (i / (readings.length - 1)) * s.cw,
         y: PAD.top  + s.ch * (1 - r.percentage / 100)
     }));
 
-    // Area fill
+    // Area fill: Warm golden caramel to rich cocoa
     ctx.beginPath();
     ctx.moveTo(points[0].x, PAD.top + s.ch);
     points.forEach(p => ctx.lineTo(p.x, p.y));
@@ -544,31 +537,31 @@ function updateChart() {
     ctx.closePath();
 
     const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + s.ch);
-    grad.addColorStop(0, 'rgba(56, 189, 248, 0.30)');
-    grad.addColorStop(1, 'rgba(56, 189, 248, 0.03)');
+    grad.addColorStop(0, 'rgba(229, 169, 60, 0.40)');
+    grad.addColorStop(1, 'rgba(116, 52, 25, 0.05)');
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Data line
+    // Data line: Warm Caramel Gold
     ctx.beginPath();
     points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth   = 2;
+    ctx.strokeStyle = '#e5a93c';
+    ctx.lineWidth   = 2.5;
     ctx.lineJoin    = 'round';
     ctx.stroke();
 
-    // Current-value dot
+    // Current point dot
     const last = points[points.length - 1];
     ctx.beginPath();
     ctx.arc(last.x, last.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle   = '#38bdf8';
+    ctx.fillStyle   = '#f5c469';
     ctx.fill();
-    ctx.strokeStyle = '#0f172a';
+    ctx.strokeStyle = '#150d0a';
     ctx.lineWidth   = 2;
     ctx.stroke();
 
-    // Time labels on X axis
-    ctx.fillStyle = '#64748b';
+    // Time labels
+    ctx.fillStyle = '#a57e65';
     ctx.font      = '10px system-ui, sans-serif';
 
     ctx.textAlign = 'left';
@@ -579,8 +572,7 @@ function updateChart() {
     ctx.fillText(new Date(readings[readings.length - 1].timestamp).toLocaleTimeString(),
                  s.w - PAD.right, s.h - 4);
 
-    // Info label
     const dur = ((readings[readings.length - 1].timestamp - readings[0].timestamp) / 1000).toFixed(0);
     document.getElementById('chart-info').textContent =
-        `${readings.length} readings · ${dur}s`;
+        `${readings.length} packets · ${dur}s active`;
 }

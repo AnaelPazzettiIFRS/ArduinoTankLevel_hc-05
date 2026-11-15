@@ -1,138 +1,55 @@
-# 💧 Water Tank Monitor
+# 🍫 ChocoTank™ — Molten Chocolate Silo Monitor
 
-Real-time water tank level monitoring dashboard powered by an **Arduino HC-SR04 ultrasonic sensor** and **HC-05 Bluetooth module**. Runs entirely in the browser — no server, no database — using the **Web Serial API**.
+Real-time liquid chocolate tank level telemetry dashboard for confectionery plants, powered by an **Arduino HC-SR04 ultrasonic transducer** and **HC-05 Bluetooth module**. Runs 100% client-side in the browser via the **Web Serial API** — zero backend required.
 
 🔗 **Live Dashboard:** `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
 
 ---
 
-## How It Works
+## Industrial Architecture
 
 ```
-┌─────────────┐     Bluetooth (SPP)     ┌────────────┐     Web Serial API     ┌──────────────┐
-│  Arduino     │ ──────────────────────► │  HC-05     │ ◄───────────────────── │  Browser     │
-│  HC-SR04     │  "25 cm\r\n" @ 9600    │  (paired)  │   virtual COM port     │  Dashboard   │
-└─────────────┘                          └────────────┘                        └──────────────┘
+┌────────────────────┐     Bluetooth SPP (9600)    ┌────────────┐     Web Serial API     ┌────────────────────────┐
+│  Arduino HC-SR04   │ ──────────────────────────► │  HC-05     │ ◄───────────────────── │  ChocoTank™ Dashboard  │
+│  Ultrasonic Sensor │   "25 cm\r\n" every 500ms   │  (paired)  │   Virtual COM port     │  (Chrome / Edge)       │
+└────────────────────┘                             └────────────┘                        └────────────────────────┘
 ```
 
-1. The Arduino reads distance from the **HC-SR04** every 500 ms and sends `<distance> cm` over the **HC-05** Bluetooth serial link.
-2. Your PC pairs with the HC-05 via **Windows Bluetooth Settings**, which creates a virtual COM port.
-3. The web dashboard connects to that COM port through the **Web Serial API** (Chrome / Edge) and displays the water level in real-time.
+1. **Ultrasonic Transducer**: Mounted at the top of the chocolate silo, sending acoustic pulses down to the molten chocolate surface.
+2. **Telemetry Stream**: Arduino computes distance in cm and streams readings over the HC-05 serial link.
+3. **Plant Dashboard**: Receives data via Web Serial in Chrome/Edge, converts distance to volume/fill %, visualizes the vat in real time, and triggers alarms if molten chocolate runs low.
 
 ---
 
 ## Features
 
-- 🌊 **Animated tank visualization** with real-time water level
-- 📊 **Live stats** — distance, water level (cm), fill percentage, status
-- 📈 **History chart** — last ~2 minutes of readings (canvas, no libraries)
-- 🚨 **Low-level alerts** — configurable low & critical thresholds
-- 🔔 **Browser notifications** — system-level alerts when level drops
-- 🔊 **Sound alerts** — audible warning via Web Audio API
-- ⚙️ **Configurable settings** — tank height, sensor offset, thresholds (saved in localStorage)
-- 📱 **Responsive** — works on desktop and tablet screens
-- 🚀 **Zero dependencies** — vanilla HTML / CSS / JS, ready for GitHub Pages
+- 🍫 **Molten Chocolate Vat Visualization**: Silky wave physics, glossy surface sheen, and color transitions (Rich Milk Chocolate → Amber Warning → Critical Depletion Red).
+- 📊 **Confectionery Telemetry**: Real-time distance, chocolate depth (cm), silo fill ratio (%), and batch status.
+- 📈 **Caramel Stream History**: High-resolution 2-minute rolling trendline with threshold alerts.
+- 🚨 **Plant Supply Alarms**: Configurable Low Supply warning and Critical Depletion emergency alarm.
+- 🔊 **Factory Audio & Browser Alerts**: Synthesized industrial tone alerts and desktop notifications.
+- ⚙️ **Vat Calibration**: Configurable silo height, sensor offset, and alert thresholds (persisted in `localStorage`).
+- 🚀 **Zero Dependencies**: Pure HTML5, CSS3, and JavaScript — ready for GitHub Pages hosting.
 
 ---
 
-## Setup
+## Hardware Setup
 
-### 1. Hardware (Arduino)
-
-| Component | Pin |
-|-----------|-----|
-| HC-SR04 TRIG | D2 |
-| HC-SR04 ECHO | D3 |
-| HC-05 RXD (via 1kΩ/2kΩ voltage divider) | D11 (TX) |
-| HC-05 TXD | D10 (RX, unused) |
-
-Upload the Arduino sketch to your board (see `arduino_sketch/` or the code below).
-
-### 2. Pair HC-05 with Windows
-
-1. **Settings → Bluetooth & devices → Add device → Bluetooth**
-2. Select **HC-05** (default PIN: `1234` or `0000`)
-3. Windows will create a virtual COM port (e.g., `COM5`)
-
-### 3. Open the Dashboard
-
-1. Open the live GitHub Pages URL in **Google Chrome** or **Microsoft Edge**
-2. Click **⚡ Connect**
-3. In the serial port picker, select the HC-05 COM port
-4. Data will stream in real-time!
-
-### 4. Configure
-
-Adjust these settings in the dashboard sidebar:
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Tank Height | Internal height of your tank in cm | 100 |
-| Sensor Offset | Distance from sensor to water when tank is full | 5 |
-| Low Level Alert | Percentage to trigger a warning | 20% |
-| Critical Level | Percentage to trigger a critical alarm | 10% |
+| Component | Pin | Notes |
+|---|---|---|
+| HC-SR04 TRIG | D2 | Ultrasonic pulse output |
+| HC-SR04 ECHO | D3 | Ultrasonic return input |
+| HC-05 RXD | D11 (TX) | Via 1kΩ / 2kΩ voltage divider (protects 3.3V HC-05 RX) |
+| HC-05 TXD | D10 (RX) | Optional (Arduino only transmits) |
 
 ---
 
-## Browser Compatibility
+## Connecting from Chrome / Edge
 
-| Browser | Supported |
-|---------|-----------|
-| Google Chrome (desktop) | ✅ |
-| Microsoft Edge (desktop) | ✅ |
-| Firefox | ❌ (no Web Serial API) |
-| Safari | ❌ (no Web Serial API) |
-| Mobile browsers | ❌ (no Web Serial API) |
-
----
-
-## Deploy to GitHub Pages
-
-1. Create a GitHub repository
-2. Push all files (`index.html`, `style.css`, `app.js`)
-3. Go to **Settings → Pages → Source → Deploy from a branch → `main` / `root`**
-4. Your dashboard will be live at `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
-
----
-
-## Arduino Sketch
-
-```cpp
-#include <SoftwareSerial.h>
-
-const int btRxPin = 10;
-const int btTxPin = 11;
-SoftwareSerial BTSerial(btRxPin, btTxPin);
-
-const int trigPin = 2;
-const int echoPin = 3;
-
-void setup() {
-  Serial.begin(9600);
-  BTSerial.begin(9600);
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-}
-
-void loop() {
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  long duration = pulseIn(echoPin, HIGH, 30000);
-  long cm = duration / 29 / 2;
-
-  Serial.print(cm);
-  Serial.println(" cm");
-
-  BTSerial.print(cm);
-  BTSerial.println(" cm");
-
-  delay(500);
-}
-```
+1. **Pair HC-05**: Open Windows Bluetooth settings, pair with `HC-05` (PIN `1234` or `0000`).
+2. **Open Dashboard**: Go to the GitHub Pages URL in Chrome or Edge.
+3. **Connect Silo**: Click **⚡ Connect Silo** and pick the HC-05 virtual COM port.
+4. **Monitor**: Watch your molten chocolate level update live every 500ms!
 
 ---
 
