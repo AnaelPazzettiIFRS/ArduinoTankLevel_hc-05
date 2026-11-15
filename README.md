@@ -2,7 +2,7 @@
 
 Real-time water tank level monitoring dashboard powered by an **Arduino HC-SR04 ultrasonic sensor** and **HC-05 Bluetooth module**. Runs entirely in the browser — no server, no database — using the **Web Serial API**.
 
-🔗 **Live Dashboard:** `https://<your-username>.github.io/ArduinoUltrassonics/`
+🔗 **Live Dashboard:** `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
 
 ---
 
@@ -91,7 +91,7 @@ Adjust these settings in the dashboard sidebar:
 1. Create a GitHub repository
 2. Push all files (`index.html`, `style.css`, `app.js`)
 3. Go to **Settings → Pages → Source → Deploy from a branch → `main` / `root`**
-4. Your dashboard will be live at `https://<username>.github.io/<repo>/`
+4. Your dashboard will be live at `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
 
 ---
 
