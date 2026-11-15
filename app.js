@@ -1,18 +1,18 @@
 /* ============================================================
-   ChocoTank™ Confectionery Systems — app.js
-   Uses the Web Serial API to read HC-05 telemetry (paired via
-   Windows Bluetooth → virtual COM port).
+   ChocoTank™ Confectionery Systems — app.js (Português pt-BR)
+   Utiliza a Web Serial API para ler os dados do HC-05
+   (pareado via Bluetooth do Windows → porta COM virtual).
    ============================================================ */
 
 // ────────────────────────────────────────────────────────────
-// Configuration & State
+// Configuração & Estado
 // ────────────────────────────────────────────────────────────
 
 const DEFAULT_CONFIG = {
-    tankHeight: 100,       // cm — internal height of the chocolate silo
-    sensorOffset: 5,       // cm — sensor-to-chocolate when 100% full
-    lowThreshold: 20,      // %  — low-level alert
-    criticalThreshold: 10, // %  — critical depletion alert
+    tankHeight: 100,       // cm — altura interna útil do silo de chocolate
+    sensorOffset: 5,       // cm — distância do sensor até o chocolate a 100%
+    lowThreshold: 20,      // %  — alerta de nível baixo
+    criticalThreshold: 10, // %  — alerta de esgotamento crítico
     soundEnabled: true
 };
 
@@ -25,17 +25,17 @@ let readableStreamClosed = null;
 let buffer = '';
 let isConnected = false;
 
-// Data
+// Dados
 let readings = [];       // { timestamp, distance, waterLevel, percentage }
 let sessionMin = Infinity;
 let sessionMax = -Infinity;
 let lastAlertLevel = null; // 'normal' | 'warning' | 'critical'
 
-// Chart
+// Gráfico
 let chartCanvas, chartCtx;
 
 // ────────────────────────────────────────────────────────────
-// Boot
+// Inicialização
 // ────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,14 +53,14 @@ function checkBrowserSupport() {
 }
 
 // ────────────────────────────────────────────────────────────
-// Settings (persisted in localStorage)
+// Configurações (salvas no localStorage)
 // ────────────────────────────────────────────────────────────
 
 function loadSettings() {
     try {
-        const saved = localStorage.getItem('chocoTankConfig');
+        const saved = localStorage.getItem('chocoTankConfig_pt');
         if (saved) config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
-    } catch (_) { /* ignore corrupt data */ }
+    } catch (_) { /* ignora dados corrompidos */ }
 
     document.getElementById('tank-height').value        = config.tankHeight;
     document.getElementById('sensor-offset').value      = config.sensorOffset;
@@ -84,15 +84,15 @@ function updateSettings() {
     config.criticalThreshold = Math.max(1, parseInt(document.getElementById('critical-threshold').value) || 10);
     config.soundEnabled      = document.getElementById('sound-enabled').checked;
 
-    // Critical must be ≤ low
+    // Crítico deve ser menor que o nível baixo
     if (config.criticalThreshold >= config.lowThreshold) {
         config.criticalThreshold = config.lowThreshold - 1;
         document.getElementById('critical-threshold').value = config.criticalThreshold;
     }
 
-    localStorage.setItem('chocoTankConfig', JSON.stringify(config));
+    localStorage.setItem('chocoTankConfig_pt', JSON.stringify(config));
 
-    // Reprocess the last reading visually
+    // Reprocessa a última leitura visualmente com as novas configurações
     if (readings.length > 0) {
         const last = readings[readings.length - 1];
         const waterLevel  = config.tankHeight - (last.distance - config.sensorOffset);
@@ -106,7 +106,7 @@ function updateSettings() {
 }
 
 // ────────────────────────────────────────────────────────────
-// Serial Connection
+// Conexão Serial (Bluetooth HC-05)
 // ────────────────────────────────────────────────────────────
 
 async function toggleConnection() {
@@ -133,9 +133,9 @@ async function connect() {
         readLoop();
 
     } catch (err) {
-        console.error('Connection failed:', err);
+        console.error('Falha na conexão:', err);
         if (err.name !== 'NotFoundError') {
-            showNotification('Connection failed: ' + err.message, 'error');
+            showNotification('Falha ao conectar: ' + err.message, 'error');
         }
     }
 }
@@ -153,7 +153,7 @@ async function disconnect() {
             port = null;
         }
     } catch (err) {
-        console.error('Disconnect error:', err);
+        console.error('Erro ao desconectar:', err);
     }
 
     isConnected = false;
@@ -174,9 +174,9 @@ async function readLoop() {
                 processBuffer();
             }
         } catch (err) {
-            console.error('Read error:', err);
+            console.error('Erro de leitura:', err);
             if (isConnected) {
-                showNotification('Silo telemetry link interrupted — reconnect HC-05.', 'error');
+                showNotification('Conexão perdida com o sensor HC-05. Reconecte o silo.', 'error');
             }
         } finally {
             if (reader) { reader.releaseLock(); reader = null; }
@@ -190,7 +190,7 @@ async function readLoop() {
 }
 
 // ────────────────────────────────────────────────────────────
-// Data Parsing
+// Processamento de Dados
 // ────────────────────────────────────────────────────────────
 
 function processBuffer() {
@@ -222,7 +222,7 @@ function processReading(distance) {
     };
 
     readings.push(reading);
-    if (readings.length > 240) readings.shift(); // ~2 min at 500ms
+    if (readings.length > 240) readings.shift(); // ~2 minutos de dados
 
     sessionMin = Math.min(sessionMin, reading.percentage);
     sessionMax = Math.max(sessionMax, reading.percentage);
@@ -233,11 +233,11 @@ function processReading(distance) {
 }
 
 // ────────────────────────────────────────────────────────────
-// Dashboard Updates
+// Atualização do Painel
 // ────────────────────────────────────────────────────────────
 
 function updateDashboard(reading) {
-    // Chocolate level bar in silo
+    // Barra de chocolate líquido no silo
     const waterEl = document.getElementById('water');
     waterEl.style.height = reading.percentage + '%';
 
@@ -245,22 +245,22 @@ function updateDashboard(reading) {
     else if (reading.percentage <= config.lowThreshold)      waterEl.className = 'water chocolate warning';
     else                                                     waterEl.className = 'water chocolate healthy';
 
-    // Stat cards
+    // Cartões de métricas
     document.getElementById('tank-percentage').textContent  = reading.percentage.toFixed(1) + '%';
     document.getElementById('stat-distance').textContent    = reading.distance + ' cm';
     document.getElementById('stat-level').textContent       = reading.waterLevel.toFixed(1) + ' cm';
     document.getElementById('stat-percentage').textContent  = reading.percentage.toFixed(1) + '%';
 
-    // Status label for confectionery production
+    // Status do lote na produção
     let status, statusClass, emoji;
     if (reading.percentage <= config.criticalThreshold) {
-        status = 'CRITICAL DEPLETION'; statusClass = 'critical'; emoji = '🚨';
+        status = 'ESGOTAMENTO CRÍTICO'; statusClass = 'critical'; emoji = '🚨';
     } else if (reading.percentage <= config.lowThreshold) {
-        status = 'LOW SUPPLY'; statusClass = 'low'; emoji = '⚠️';
+        status = 'NÍVEL BAIXO'; statusClass = 'low'; emoji = '⚠️';
     } else if (reading.percentage >= 90) {
-        status = 'Silo Full'; statusClass = 'full'; emoji = '🍫';
+        status = 'Silo Cheio'; statusClass = 'full'; emoji = '🍫';
     } else {
-        status = 'Optimal Melt'; statusClass = 'normal'; emoji = '🍯';
+        status = 'Ponto Ideal'; statusClass = 'normal'; emoji = '🍯';
     }
 
     const statStatusEl = document.getElementById('stat-status');
@@ -268,7 +268,7 @@ function updateDashboard(reading) {
     statStatusEl.className   = 'stat-value ' + statusClass;
     document.getElementById('status-emoji').textContent = emoji;
 
-    // Session min / max / count
+    // Mínimo, Máximo e Contagem
     if (sessionMin !== Infinity) {
         document.getElementById('stat-min').textContent = sessionMin.toFixed(1) + '%';
         document.getElementById('stat-max').textContent = sessionMax.toFixed(1) + '%';
@@ -280,42 +280,42 @@ function updateConnectionUI(connected) {
     document.getElementById('status-dot').className =
         'status-dot ' + (connected ? 'connected' : 'disconnected');
     document.getElementById('status-text').textContent =
-        connected ? 'Telemetry Active' : 'Disconnected';
+        connected ? 'Telemetria Ativa' : 'Desconectado';
 
     const btn = document.getElementById('connect-btn');
     document.getElementById('connect-text').textContent =
-        connected ? 'Disconnect Silo' : 'Connect Silo';
+        connected ? 'Desconectar Silo' : 'Conectar Silo';
     btn.classList.toggle('connected', connected);
 }
 
 // ────────────────────────────────────────────────────────────
-// Alert System
+// Sistema de Alertas
 // ────────────────────────────────────────────────────────────
 
 function checkAlerts(reading) {
-    const timeStr = new Date().toLocaleTimeString();
+    const timeStr = new Date().toLocaleTimeString('pt-BR');
 
     if (reading.percentage <= config.criticalThreshold) {
         if (lastAlertLevel !== 'critical') {
             lastAlertLevel = 'critical';
-            const msg = `🚨 CRITICAL DEPLETION — Chocolate level at ${reading.percentage.toFixed(1)}% (${reading.waterLevel.toFixed(1)} cm)! Stop pump to prevent clogging.`;
+            const msg = `🚨 ESGOTAMENTO CRÍTICO — Chocolate em ${reading.percentage.toFixed(1)}% (${reading.waterLevel.toFixed(1)} cm)! Desligue a bomba para evitar entupimento.`;
             showNotification(msg, 'critical');
             addAlertLog(timeStr, msg, 'critical');
-            sendBrowserNotification('🚨 Critical Chocolate Depletion!', msg);
+            sendBrowserNotification('🚨 Esgotamento Crítico de Chocolate!', msg);
             if (config.soundEnabled) playAlertSound('critical');
         }
     } else if (reading.percentage <= config.lowThreshold) {
         if (lastAlertLevel !== 'warning') {
             lastAlertLevel = 'warning';
-            const msg = `⚠️ LOW SUPPLY — Molten chocolate at ${reading.percentage.toFixed(1)}% (${reading.waterLevel.toFixed(1)} cm). Prepare next batch.`;
+            const msg = `⚠️ NÍVEL BAIXO — Chocolate derretido em ${reading.percentage.toFixed(1)}% (${reading.waterLevel.toFixed(1)} cm). Prepare novo lote para reabastecimento.`;
             showNotification(msg, 'warning');
             addAlertLog(timeStr, msg, 'warning');
-            sendBrowserNotification('⚠️ Low Chocolate Level Alert', msg);
+            sendBrowserNotification('⚠️ Nível Baixo de Chocolate', msg);
             if (config.soundEnabled) playAlertSound('warning');
         }
     } else {
         if (lastAlertLevel === 'critical' || lastAlertLevel === 'warning') {
-            const msg = `🍫 Batch replenished! Chocolate level restored to ${reading.percentage.toFixed(1)}%.`;
+            const msg = `🍫 Lote reabastecido! Nível de chocolate normalizado em ${reading.percentage.toFixed(1)}%.`;
             showNotification(msg, 'success');
             addAlertLog(timeStr, msg, 'success');
         }
@@ -323,7 +323,7 @@ function checkAlerts(reading) {
     }
 }
 
-// ── In-page notification banner ──
+// ── Notificação no topo da página ──
 
 function showNotification(message, type) {
     const banner = document.getElementById('notification-banner');
@@ -342,7 +342,7 @@ function dismissNotification() {
     document.getElementById('notification-banner').className = 'notification-banner hidden';
 }
 
-// ── Alert log ──
+// ── Registro de alertas ──
 
 function addAlertLog(time, message, type) {
     const log   = document.getElementById('alert-log');
@@ -361,19 +361,19 @@ function addAlertLog(time, message, type) {
 
 function clearAlertLog() {
     document.getElementById('alert-log').innerHTML =
-        '<p class="alert-empty">Incident log cleared. Silo telemetry online.</p>';
+        '<p class="alert-empty">Registro limpo. Monitoramento do silo ativo.</p>';
 }
 
-// ── Browser Notification API ──
+// ── Notificações do Navegador ──
 
 function requestNotificationPermission() {
     if (!('Notification' in window)) {
-        showNotification('Browser notifications are not supported here.', 'error');
+        showNotification('Notificações não são suportadas neste navegador.', 'error');
         return;
     }
     Notification.requestPermission().then(perm => {
-        if (perm === 'granted') showNotification('Production notifications enabled!', 'success');
-        else showNotification('Notification permission denied.', 'warning');
+        if (perm === 'granted') showNotification('Notificações do navegador ativadas com sucesso!', 'success');
+        else showNotification('Permissão de notificação recusada.', 'warning');
     });
 }
 
@@ -383,7 +383,7 @@ function sendBrowserNotification(title, body) {
     }
 }
 
-// ── Sound alerts (Web Audio API) ──
+// ── Alertas Sonoros (Web Audio API) ──
 
 function playAlertSound(type) {
     try {
@@ -413,11 +413,11 @@ function playAlertSound(type) {
             gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35);
             osc.stop(ctx.currentTime + 0.4);
         }
-    } catch (_) { /* audio not available */ }
+    } catch (_) { /* áudio não disponível */ }
 }
 
 // ────────────────────────────────────────────────────────────
-// Chart (Canvas — Warm Caramel & Cocoa)
+// Gráfico em Tempo Real (Canvas)
 // ────────────────────────────────────────────────────────────
 
 function setupChart() {
@@ -505,7 +505,7 @@ function drawEmptyChart() {
     chartCtx.fillStyle = '#8e7362';
     chartCtx.font      = '14px system-ui, sans-serif';
     chartCtx.textAlign = 'center';
-    chartCtx.fillText('Awaiting chocolate level telemetry…', s.w / 2, s.h / 2);
+    chartCtx.fillText('Aguardando telemetria do nível de chocolate…', s.w / 2, s.h / 2);
 }
 
 function updateChart() {
@@ -519,8 +519,8 @@ function updateChart() {
     chartCtx.fillRect(0, 0, s.w, s.h);
 
     drawGrid(ctx, s);
-    drawThresholdLine(ctx, s, config.lowThreshold,      '#f59e0b', 'Low Supply ' + config.lowThreshold + '%');
-    drawThresholdLine(ctx, s, config.criticalThreshold,  '#ef4444', 'Critical Depletion ' + config.criticalThreshold + '%');
+    drawThresholdLine(ctx, s, config.lowThreshold,      '#f59e0b', 'Nível Baixo ' + config.lowThreshold + '%');
+    drawThresholdLine(ctx, s, config.criticalThreshold,  '#ef4444', 'Esgotamento Crítico ' + config.criticalThreshold + '%');
 
     if (readings.length < 2) return;
 
@@ -529,7 +529,7 @@ function updateChart() {
         y: PAD.top  + s.ch * (1 - r.percentage / 100)
     }));
 
-    // Area fill: Warm golden caramel to rich cocoa
+    // Preenchimento gradiente: Caramelo Dourado ao Cacau
     ctx.beginPath();
     ctx.moveTo(points[0].x, PAD.top + s.ch);
     points.forEach(p => ctx.lineTo(p.x, p.y));
@@ -542,7 +542,7 @@ function updateChart() {
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Data line: Warm Caramel Gold
+    // Linha de dados: Dourado Caramelo
     ctx.beginPath();
     points.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
     ctx.strokeStyle = '#e5a93c';
@@ -550,7 +550,7 @@ function updateChart() {
     ctx.lineJoin    = 'round';
     ctx.stroke();
 
-    // Current point dot
+    // Ponto atual
     const last = points[points.length - 1];
     ctx.beginPath();
     ctx.arc(last.x, last.y, 5, 0, Math.PI * 2);
@@ -560,19 +560,19 @@ function updateChart() {
     ctx.lineWidth   = 2;
     ctx.stroke();
 
-    // Time labels
+    // Rótulos de tempo no eixo X
     ctx.fillStyle = '#a57e65';
     ctx.font      = '10px system-ui, sans-serif';
 
     ctx.textAlign = 'left';
-    ctx.fillText(new Date(readings[0].timestamp).toLocaleTimeString(),
+    ctx.fillText(new Date(readings[0].timestamp).toLocaleTimeString('pt-BR'),
                  PAD.left, s.h - 4);
 
     ctx.textAlign = 'right';
-    ctx.fillText(new Date(readings[readings.length - 1].timestamp).toLocaleTimeString(),
+    ctx.fillText(new Date(readings[readings.length - 1].timestamp).toLocaleTimeString('pt-BR'),
                  s.w - PAD.right, s.h - 4);
 
     const dur = ((readings[readings.length - 1].timestamp - readings[0].timestamp) / 1000).toFixed(0);
     document.getElementById('chart-info').textContent =
-        `${readings.length} packets · ${dur}s active`;
+        `${readings.length} leituras · ${dur}s de monitoramento`;
 }

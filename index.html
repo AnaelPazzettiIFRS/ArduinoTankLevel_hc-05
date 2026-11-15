@@ -1,67 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍫 ChocoTank™ • Liquid Chocolate Silo Monitor</title>
+    <title>🍫 ChocoTank™ • Monitor de Silo de Chocolate</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍫</text></svg>">
 </head>
 <body>
     <div id="app">
 
-        <!-- Browser Support Warning -->
+        <!-- Aviso de compatibilidade do navegador -->
         <div id="browser-warning" class="browser-warning hidden">
             <div class="warning-content">
                 <span>⚠️</span>
-                <p>Web Serial API is not supported in this browser. Please use <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> (desktop) to connect to the HC-05 factory receiver.</p>
+                <p>A Web Serial API não é suportada neste navegador. Por favor, utilize o <strong>Google Chrome</strong> ou <strong>Microsoft Edge</strong> (computador) para conectar ao receptor HC-05 da fábrica.</p>
             </div>
         </div>
 
-        <!-- Notification Banner -->
+        <!-- Banner de Notificação -->
         <div id="notification-banner" class="notification-banner hidden">
             <span id="notification-icon">🍫</span>
             <span id="notification-text"></span>
             <button id="notification-close" onclick="dismissNotification()">✕</button>
         </div>
 
-        <!-- Header -->
+        <!-- Cabeçalho -->
         <header>
             <div class="header-left">
-                <div class="brand-badge">🏭 CONFECTIONERY PLANT TELEMETRY</div>
-                <h1>🍫 ChocoTank™ Silo Monitor</h1>
-                <span class="subtitle">Real-time HC-05 Bluetooth Ultrasonic Sensor • Molten Chocolate Vat #01</span>
+                <div class="brand-badge">🏭 TELEMETRIA INDUSTRIAL DE CONFEITARIA</div>
+                <h1>🍫 ChocoTank™ • Monitor de Silo</h1>
+                <span class="subtitle">Sensor Ultrassônico Bluetooth HC-05 em Tempo Real • Tanque de Chocolate #01</span>
             </div>
             <div class="header-right">
                 <div class="connection-status">
                     <span id="status-dot" class="status-dot disconnected"></span>
-                    <span id="status-text">Disconnected</span>
+                    <span id="status-text">Desconectado</span>
                 </div>
                 <button id="connect-btn" class="btn-connect" onclick="toggleConnection()">
                     <span id="connect-icon">⚡</span>
-                    <span id="connect-text">Connect Silo</span>
+                    <span id="connect-text">Conectar Silo</span>
                 </button>
             </div>
         </header>
 
-        <!-- Main Dashboard Grid -->
+        <!-- Grade Principal do Painel -->
         <main>
 
-            <!-- Tank Visualization -->
+            <!-- Visualização do Silo -->
             <section class="tank-section">
                 <div class="card vat-card">
-                    <h2>🍫 Molten Chocolate Silo</h2>
+                    <h2>🍫 Silo de Chocolate Derretido</h2>
                     <div class="tank-wrapper">
                         <div class="tank-container">
                             <div class="tank vat-tank">
-                                <div class="sensor-icon" title="HC-SR04 Ultrasonic Transducer">📡</div>
+                                <div class="sensor-icon" title="Transdutor Ultrassônico HC-SR04">📡</div>
                                 <div id="water" class="water chocolate healthy" style="height: 0%">
                                     <div class="chocolate-sheen"></div>
                                     <div class="wave"></div>
                                     <div class="wave wave2"></div>
                                 </div>
                                 <div id="tank-percentage" class="tank-percentage">—</div>
-                                <!-- Tank level markers -->
+                                <!-- Marcadores de nível -->
                                 <div class="tank-markers">
                                     <span style="top: 0%">100%</span>
                                     <span style="top: 25%">75%</span>
@@ -73,18 +73,18 @@
                         </div>
                     </div>
                     <div class="vat-footer">
-                        <span>♨️ Heated Jacket: Active</span>
-                        <span>Viscosity: Optimal</span>
+                        <span>♨️ Camisa Térmica: Ativa</span>
+                        <span>Viscosidade: Ideal</span>
                     </div>
                 </div>
             </section>
 
-            <!-- Stats Cards -->
+            <!-- Cartões de Métricas -->
             <section class="stats-section">
                 <div class="card stat-card">
                     <div class="stat-icon">📏</div>
                     <div class="stat-info">
-                        <span class="stat-label">Sensor Distance</span>
+                        <span class="stat-label">Distância do Sensor</span>
                         <span id="stat-distance" class="stat-value">— cm</span>
                     </div>
                 </div>
@@ -92,7 +92,7 @@
                 <div class="card stat-card">
                     <div class="stat-icon">🍫</div>
                     <div class="stat-info">
-                        <span class="stat-label">Chocolate Level</span>
+                        <span class="stat-label">Nível de Chocolate</span>
                         <span id="stat-level" class="stat-value">— cm</span>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                 <div class="card stat-card">
                     <div class="stat-icon">🍯</div>
                     <div class="stat-info">
-                        <span class="stat-label">Silo Fill Ratio</span>
+                        <span class="stat-label">Capacidade do Silo</span>
                         <span id="stat-percentage" class="stat-value">—</span>
                     </div>
                 </div>
@@ -108,91 +108,91 @@
                 <div class="card stat-card">
                     <div class="stat-icon" id="status-emoji">⏳</div>
                     <div class="stat-info">
-                        <span class="stat-label">Batch Supply Status</span>
-                        <span id="stat-status" class="stat-value status-idle">Awaiting Data</span>
+                        <span class="stat-label">Status do Lote</span>
+                        <span id="stat-status" class="stat-value status-idle">Aguardando Dados</span>
                     </div>
                 </div>
 
                 <div class="card stat-card stat-card-wide">
                     <div class="stat-row">
                         <div class="stat-mini">
-                            <span class="stat-label">Session Min</span>
+                            <span class="stat-label">Mín. da Sessão</span>
                             <span id="stat-min" class="stat-value small">—</span>
                         </div>
                         <div class="stat-mini">
-                            <span class="stat-label">Session Max</span>
+                            <span class="stat-label">Máx. da Sessão</span>
                             <span id="stat-max" class="stat-value small">—</span>
                         </div>
                         <div class="stat-mini">
-                            <span class="stat-label">Telemetry Packets</span>
+                            <span class="stat-label">Leituras</span>
                             <span id="stat-count" class="stat-value small">0</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Settings Panel -->
+            <!-- Painel de Configurações -->
             <section class="settings-section">
                 <div class="card">
-                    <h2>⚙️ Silo Calibration</h2>
+                    <h2>⚙️ Calibração do Silo</h2>
 
                     <div class="setting-group">
-                        <label for="tank-height">Vat Total Height (cm)</label>
+                        <label for="tank-height">Altura Útil do Silo (cm)</label>
                         <input type="number" id="tank-height" value="100" min="1" max="1000">
-                        <span class="setting-help">Internal capacity height of the chocolate silo</span>
+                        <span class="setting-help">Altura interna total de armazenamento de chocolate</span>
                     </div>
 
                     <div class="setting-group">
-                        <label for="sensor-offset">Sensor Head Clearance (cm)</label>
+                        <label for="sensor-offset">Folga do Sensor (cm)</label>
                         <input type="number" id="sensor-offset" value="5" min="0" max="200">
-                        <span class="setting-help">Distance from sensor to chocolate surface when 100% full</span>
+                        <span class="setting-help">Distância entre o sensor e o chocolate quando 100% cheio</span>
                     </div>
 
                     <div class="setting-group">
-                        <label for="low-threshold">Low Chocolate Alert (%)</label>
+                        <label for="low-threshold">Alerta de Nível Baixo (%)</label>
                         <input type="number" id="low-threshold" value="20" min="1" max="99">
-                        <span class="setting-help">Trigger warning when molten chocolate drops below this</span>
+                        <span class="setting-help">Alerta quando o chocolate líquido estiver abaixo deste valor</span>
                     </div>
 
                     <div class="setting-group">
-                        <label for="critical-threshold">Critical Depletion (%)</label>
+                        <label for="critical-threshold">Esgotamento Crítico (%)</label>
                         <input type="number" id="critical-threshold" value="10" min="1" max="50">
-                        <span class="setting-help">Critical alarm to prevent pump cavitation & pipe clogging</span>
+                        <span class="setting-help">Alarme crítico para evitar cavitação da bomba e entupimento</span>
                     </div>
 
                     <div class="setting-group">
                         <label class="checkbox-label">
                             <input type="checkbox" id="sound-enabled" checked>
-                            <span>🔊 Factory Audible Alarm</span>
+                            <span>🔊 Alarme Sonoro da Fábrica</span>
                         </label>
                     </div>
 
                     <div class="setting-group">
                         <button class="btn-secondary" onclick="requestNotificationPermission()">
-                            🔔 Enable Browser Production Alerts
+                            🔔 Ativar Alertas no Navegador
                         </button>
                     </div>
                 </div>
 
-                <!-- Connection Help -->
+                <!-- Ajuda de Conexão -->
                 <div class="card card-info">
-                    <h3>🏭 Factory Bluetooth Pairing</h3>
+                    <h3>🏭 Como Conectar via Bluetooth</h3>
                     <ol>
-                        <li>Pair HC-05 with Windows Bluetooth (Default PIN: <code>1234</code> or <code>0000</code>)</li>
-                        <li>Open this web console in <strong>Chrome</strong> or <strong>Edge</strong></li>
-                        <li>Click <strong>Connect Silo</strong> and choose the virtual serial COM port</li>
-                        <li>Real-time chocolate level telemetry will begin streaming!</li>
+                        <li>Pareie o <strong>HC-05</strong> no Windows (PIN padrão: <code>1234</code> ou <code>0000</code>)</li>
+                        <li>Abra esta página no <strong>Google Chrome</strong> ou <strong>Microsoft Edge</strong></li>
+                        <li>Clique em <strong>Conectar Silo</strong> e selecione a porta serial COM virtual do HC-05</li>
+                        <li>Os dados serão transmitidos sem fio em tempo real!</li>
                     </ol>
                 </div>
             </section>
         </main>
 
-        <!-- Chart Section -->
+        <!-- Seção do Gráfico -->
         <section class="chart-section">
             <div class="card">
                 <div class="chart-header">
-                    <h2>📈 Chocolate Level History</h2>
-                    <span id="chart-info" class="chart-info">Waiting for telemetry stream…</span>
+                    <h2>📈 Histórico do Nível de Chocolate</h2>
+                    <span id="chart-info" class="chart-info">Aguardando telemetria…</span>
                 </div>
                 <div class="chart-container">
                     <canvas id="chart"></canvas>
@@ -200,22 +200,22 @@
             </div>
         </section>
 
-        <!-- Alert Log -->
+        <!-- Registro de Alertas -->
         <section class="alert-section">
             <div class="card">
                 <div class="chart-header">
-                    <h2>🔔 Plant Incident & Refill Log</h2>
-                    <button class="btn-small" onclick="clearAlertLog()">Clear Log</button>
+                    <h2>🔔 Registro de Ocorrências e Abastecimento</h2>
+                    <button class="btn-small" onclick="clearAlertLog()">Limpar Registro</button>
                 </div>
                 <div id="alert-log" class="alert-log">
-                    <p class="alert-empty">No supply incidents recorded. Silo monitoring is active.</p>
+                    <p class="alert-empty">Nenhuma ocorrência registrada. Monitoramento do silo ativo.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Footer -->
+        <!-- Rodapé -->
         <footer>
-            <p>🍫 ChocoTank™ Industrial Telemetry • Confectionery Automation • Arduino HC-SR04 &bull; HC-05 Bluetooth (Web Serial API)</p>
+            <p>🍫 ChocoTank™ Telemetria Industrial • Automação de Confeitaria • Arduino HC-SR04 &bull; Bluetooth HC-05 (Web Serial API)</p>
         </footer>
     </div>
 

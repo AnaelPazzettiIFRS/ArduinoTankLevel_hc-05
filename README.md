@@ -1,58 +1,58 @@
-# 🍫 ChocoTank™ — Molten Chocolate Silo Monitor
+# 🍫 ChocoTank™ — Monitor de Silo de Chocolate Derretido
 
-Real-time liquid chocolate tank level telemetry dashboard for confectionery plants, powered by an **Arduino HC-SR04 ultrasonic transducer** and **HC-05 Bluetooth module**. Runs 100% client-side in the browser via the **Web Serial API** — zero backend required.
+Painel de telemetria em tempo real para monitoramento do nível de chocolate líquido em tanques de confeitarias industriais, utilizando um **sensor ultrassônico HC-SR04 no Arduino** e um **módulo Bluetooth HC-05**. Funciona 100% no navegador por meio da **Web Serial API** — sem necessidade de backend ou servidor externo.
 
-🔗 **Live Dashboard:** `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
+🔗 **Acesse o Painel Online:** `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
 
 ---
 
-## Industrial Architecture
+## Arquitetura do Sistema
 
 ```
 ┌────────────────────┐     Bluetooth SPP (9600)    ┌────────────┐     Web Serial API     ┌────────────────────────┐
-│  Arduino HC-SR04   │ ──────────────────────────► │  HC-05     │ ◄───────────────────── │  ChocoTank™ Dashboard  │
-│  Ultrasonic Sensor │   "25 cm\r\n" every 500ms   │  (paired)  │   Virtual COM port     │  (Chrome / Edge)       │
+│  Arduino HC-SR04   │ ──────────────────────────► │   HC-05    │ ◄───────────────────── │  Painel ChocoTank™     │
+│ Sensor Ultrassônico│   "25 cm\r\n" a cada 500ms  │  (pareado) │   Porta COM Virtual    │  (Chrome / Edge)       │
 └────────────────────┘                             └────────────┘                        └────────────────────────┘
 ```
 
-1. **Ultrasonic Transducer**: Mounted at the top of the chocolate silo, sending acoustic pulses down to the molten chocolate surface.
-2. **Telemetry Stream**: Arduino computes distance in cm and streams readings over the HC-05 serial link.
-3. **Plant Dashboard**: Receives data via Web Serial in Chrome/Edge, converts distance to volume/fill %, visualizes the vat in real time, and triggers alarms if molten chocolate runs low.
+1. **Sensor Ultrassônico**: Fixado no topo do silo, envia pulsos sonoros em direção à superfície do chocolate derretido.
+2. **Transmissão Sem Fio**: O Arduino calcula a distância em cm e envia as medições continuamente via Bluetooth através do HC-05.
+3. **Painel de Controle**: O navegador (Chrome ou Edge) lê a porta serial virtual, calcula o nível útil e porcentagem de preenchimento do silo, exibe a animação do chocolate e aciona alarmes caso o nível fique perigosamente baixo.
 
 ---
 
-## Features
+## Funcionalidades
 
-- 🍫 **Molten Chocolate Vat Visualization**: Silky wave physics, glossy surface sheen, and color transitions (Rich Milk Chocolate → Amber Warning → Critical Depletion Red).
-- 📊 **Confectionery Telemetry**: Real-time distance, chocolate depth (cm), silo fill ratio (%), and batch status.
-- 📈 **Caramel Stream History**: High-resolution 2-minute rolling trendline with threshold alerts.
-- 🚨 **Plant Supply Alarms**: Configurable Low Supply warning and Critical Depletion emergency alarm.
-- 🔊 **Factory Audio & Browser Alerts**: Synthesized industrial tone alerts and desktop notifications.
-- ⚙️ **Vat Calibration**: Configurable silo height, sensor offset, and alert thresholds (persisted in `localStorage`).
-- 🚀 **Zero Dependencies**: Pure HTML5, CSS3, and JavaScript — ready for GitHub Pages hosting.
+- 🍫 **Visualização Realista do Silo**: Animação de ondas viscosas, brilho superficial de chocolate derretido e mudança dinâmica de cor (Chocolate ao Leite → Caramelo de Alerta → Vermelho de Esgotamento Crítico).
+- 📊 **Telemetria Completa**: Distância do sensor, altura do chocolate (cm), porcentagem do silo (%) e status do lote de produção.
+- 📈 **Gráfico em Tempo Real**: Histórico contínuo dos últimos ~2 minutos com linhas de tolerância e calibração.
+- 🚨 **Alarmes de Produção**: Avisos de nível baixo e alarme sonoro de emergência para evitar cavitação da bomba e entupimento de tubulações.
+- 🔊 **Notificações Sonoras e no Navegador**: Alertas via Web Audio API e notificações nativas da área de trabalho.
+- ⚙️ **Calibração do Tanque**: Permite configurar altura do silo, folga do sensor e limites percentuais de disparo (salvos no `localStorage`).
+- 🚀 **Hospedagem no GitHub Pages**: Desenvolvido em HTML5, CSS3 e JavaScript puro, sem dependências externas.
 
 ---
 
-## Hardware Setup
+## Ligações no Arduino
 
-| Component | Pin | Notes |
+| Componente | Pino Arduino | Observações |
 |---|---|---|
-| HC-SR04 TRIG | D2 | Ultrasonic pulse output |
-| HC-SR04 ECHO | D3 | Ultrasonic return input |
-| HC-05 RXD | D11 (TX) | Via 1kΩ / 2kΩ voltage divider (protects 3.3V HC-05 RX) |
-| HC-05 TXD | D10 (RX) | Optional (Arduino only transmits) |
+| HC-SR04 TRIG | D2 | Pulso ultrassônico (saída) |
+| HC-SR04 ECHO | D3 | Retorno ultrassônico (entrada) |
+| HC-05 RXD | D11 (TX) | Passar pelo divisor de tensão (1kΩ / 2kΩ) para proteger o pino de 3.3V do HC-05 |
+| HC-05 TXD | D10 (RX) | Opcional (o Arduino apenas envia dados) |
 
 ---
 
-## Connecting from Chrome / Edge
+## Como Conectar (Chrome / Edge)
 
-1. **Pair HC-05**: Open Windows Bluetooth settings, pair with `HC-05` (PIN `1234` or `0000`).
-2. **Open Dashboard**: Go to the GitHub Pages URL in Chrome or Edge.
-3. **Connect Silo**: Click **⚡ Connect Silo** and pick the HC-05 virtual COM port.
-4. **Monitor**: Watch your molten chocolate level update live every 500ms!
+1. **Parear o HC-05**: Acesse as configurações de Bluetooth do Windows e pareie com o **HC-05** (PIN `1234` ou `0000`). O Windows criará uma porta COM virtual.
+2. **Abrir o Painel**: Acesse o link do GitHub Pages no Google Chrome ou Microsoft Edge.
+3. **Conectar**: Clique no botão **⚡ Conectar Silo** e selecione a porta serial correspondente ao HC-05.
+4. **Pronto!**: Os dados do silo serão atualizados na tela a cada 500 ms.
 
 ---
 
-## License
+## Licença
 
 MIT
