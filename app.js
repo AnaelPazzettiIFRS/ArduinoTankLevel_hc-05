@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkBrowserSupport() {
+    if (window.AndroidBridge) {
+        // Executando dentro do aplicativo Android nativo ChocoTank
+        document.getElementById('browser-warning').classList.add('hidden');
+        document.getElementById('connect-btn').disabled = false;
+        return;
+    }
     if (!('serial' in navigator)) {
         document.getElementById('browser-warning').classList.remove('hidden');
         document.getElementById('connect-btn').disabled = true;
@@ -110,12 +116,51 @@ function updateSettings() {
 // ────────────────────────────────────────────────────────────
 
 async function toggleConnection() {
+    if (window.AndroidBridge) {
+        if (isConnected) {
+            window.AndroidBridge.disconnect();
+            isConnected = false;
+            updateConnectionUI(false);
+        } else {
+            window.AndroidBridge.connect();
+        }
+        return;
+    }
+
     if (isConnected) {
         await disconnect();
     } else {
         await connect();
     }
 }
+
+// Handlers chamados pela camada nativa Android
+window.handleAndroidBluetoothData = function(line) {
+    if (!isConnected) {
+        isConnected = true;
+        updateConnectionUI(true);
+    }
+    const match = line.match(/^(\d+)\s*cm$/i);
+    if (match) {
+        const distance = parseInt(match[1], 10);
+        if (distance > 0) {
+            processReading(distance);
+        }
+    } else {
+        const num = parseInt(line, 10);
+        if (!isNaN(num) && num > 0) {
+            processReading(num);
+        }
+    }
+};
+
+window.handleAndroidBluetoothStatus = function(connected, errorMsg) {
+    isConnected = connected;
+    updateConnectionUI(connected);
+    if (errorMsg) {
+        showNotification(errorMsg, 'error');
+    }
+};
 
 async function connect() {
     try {

@@ -2,7 +2,8 @@
 
 Painel de telemetria em tempo real para monitoramento do nível de chocolate líquido em tanques de confeitarias industriais, utilizando um **sensor ultrassônico HC-SR04 no Arduino** e um **módulo Bluetooth HC-05**. Funciona 100% no navegador por meio da **Web Serial API** — sem necessidade de backend ou servidor externo.
 
-🔗 **Acesse o Painel Online:** `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`
+🔗 **Acesse o Painel Online:** `https://AnaelPazzettiIFRS.github.io/ArduinoTankLevel_hc-05/`  
+📱 **Baixar APK para Android (Conexão Direta HC-05):** [ChocoTank.apk](https://raw.githubusercontent.com/AnaelPazzettiIFRS/ArduinoTankLevel_hc-05/main/ChocoTank.apk)
 
 ---
 
